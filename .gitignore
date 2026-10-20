@@ -1,0 +1,19 @@
+# Local user data and uploads (never commit these)
+data/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Secrets (Firebase keys etc.)
+.env
+*.json.key
+serviceAccountKey.json
+.streamlit/secrets.toml
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
