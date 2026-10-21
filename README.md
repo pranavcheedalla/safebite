@@ -11,7 +11,7 @@ Track your allergies and medications, scan food barcodes, and get warned when a 
 | Profile + Alerts | `features/profile.py` | Audrina |
 | Food Scanner | `features/scanner.py` | Pranav |
 | Calorie Tracker | `features/calories.py` | Vedanth |
-| Symptom Checker (AI chatbot) | `features/chatbot.py` | ________ |
+| Symptom Checker (AI chatbot) | `features/chatbot.py` | Tharoon |
 | Medical Files (stretch) | `features/medical_files.py` | ________ |
 
 **Shared code** lives in `shared/`. Ask the group before changing it, since everyone depends on it:
