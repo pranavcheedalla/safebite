@@ -20,12 +20,12 @@ Work on your own branch (see the README). Only change your own file. Ask the gro
 
 Everyone else's tab reads the lists you save, so build yours first.
 
-- [ ] Show the user's allergies as a list (it starts empty).
-- [ ] Add a text box and an "Add" button that adds an allergy and saves it. Save it in **lowercase**.
-- [ ] Add a "Remove" button next to each allergy. (Every Streamlit button needs a unique `key=`.)
-- [ ] Do the same for medications and foods to avoid. Can you write one function and reuse it 3 times?
-- [ ] **Alerts:** count entries in `user["scan_history"]` where `"level"` isn't `"safe"` and show `st.warning` if there are any. (This will be empty until Pranav's scanner saves history.)
-- [ ] **Stretch:** a dropdown of common allergies (peanuts, milk, eggs, soy, wheat, shellfish).
+- [x] Show the user's allergies as a list (it starts empty).
+- [x] Add a text box and an "Add" button that adds an allergy and saves it. Save it in **lowercase**.
+- [x] Add a "Remove" button next to each allergy. (Every Streamlit button needs a unique `key=`.)
+- [x] Do the same for medications and foods to avoid. Can you write one function and reuse it 3 times?
+- [x] **Alerts:** count entries in `user["scan_history"]` where `"level"` isn't `"safe"` and show `st.warning` if there are any. (This will be empty until Pranav's scanner saves history.)
+- [x] **Stretch:** a dropdown of common allergies (peanuts, milk, eggs, soy, wheat, shellfish).
 
 ---
 
