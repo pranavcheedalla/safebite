@@ -5,7 +5,7 @@ Each tab lives in its own file inside features/, so everyone can work on
 their own file without stepping on each other.
 """
 import streamlit as st
-from features import calories, medical_files, profile, scanner
+from features import calories, chatbot, medical_files, profile, scanner
 
 st.set_page_config(page_title="SafeBite", page_icon="🥗")
 st.title("🥗 SafeBite")
@@ -31,8 +31,8 @@ if not st.session_state.username:
     st.stop()
 
 username = st.session_state.username
-tab_profile, tab_scanner, tab_calories, tab_files = st.tabs(
-    ["Profile", "Food Scanner", "Calories", "Medical Files"]
+tab_profile, tab_scanner, tab_calories, tab_chat, tab_files = st.tabs(
+    ["Profile", "Food Scanner", "Calories", "Symptom Checker", "Medical Files"]
 )
 
 with tab_profile:
@@ -41,5 +41,7 @@ with tab_scanner:
     scanner.show(username)
 with tab_calories:
     calories.show(username)
+with tab_chat:
+    chatbot.show(username)
 with tab_files:
     medical_files.show(username)
