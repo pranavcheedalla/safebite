@@ -11,28 +11,20 @@ from shared import db
 from shared.barcode import lookup_barcode, read_barcode_from_image
 from shared.interactions import FOOD_DRUG_INTERACTIONS
 
-# Extra words that count as an allergy (the stretch task).
-# If the user is allergic to "milk", we also look for these words.
 RELATED_TERMS = {
     "milk": ["whey", "casein", "lactose"],
 }
 
 
 def check_food(product, user):
-    """Decide if a food is safe for this user.
-    Returns a pair: (level, reasons)
-    level   is "safe", "caution" or "avoid"
-    reasons is a list of sentences explaining why
-    """
+    """Returns (level, reasons). level is "safe", "caution" or "avoid"."""
     level = "safe"
     reasons = []
 
-    # One big lowercase string to search inside.
     ingredients_text = product.get("ingredients") or ""
     allergens_list = product.get("allergens") or []
     searchable = (ingredients_text + " " + " ".join(allergens_list)).lower()
 
-    # 1. Allergies -> "avoid"
     for allergy in user.get("allergies", []):
         allergy = allergy.lower()
         words = [allergy] + RELATED_TERMS.get(allergy, [])
@@ -43,18 +35,15 @@ def check_food(product, user):
                     reasons.append(f"Contains {allergy}, which you are allergic to.")
                 else:
                     reasons.append(f"Contains {word}, which comes from {allergy} (you are allergic to {allergy}).")
-                break  # one reason per allergy is enough
+                break
 
-    # 2. Medication interactions -> "caution"
     for medication in user.get("medications", []):
-        interactions = FOOD_DRUG_INTERACTIONS.get(medication.lower(), [])
-        for food, message in interactions:
+        for food, message in FOOD_DRUG_INTERACTIONS.get(medication.lower(), []):
             if food in searchable:
-                if level != "avoid":   # never downgrade an "avoid"
+                if level != "avoid":
                     level = "caution"
                 reasons.append(f"{medication}: {message}")
 
-    # 3. Foods the user wants to avoid -> "caution"
     for food in user.get("avoid_foods", []):
         if food.lower() in searchable:
             if level != "avoid":
@@ -62,6 +51,32 @@ def check_food(product, user):
             reasons.append(f"Contains {food}, which is on your foods-to-avoid list.")
 
     return level, reasons
+
+
+def show_result(level, reasons):
+    """Task 1: shows the colored result box. Edit the three messages here."""
+    if level == "avoid":
+        st.error("🔴 Do NOT eat this. It conflicts with your profile.")
+    elif level == "caution":
+        st.warning("🟡 Be careful. Check the notes below.")
+    else:
+        st.success("🟢 Safe to eat!")
+
+    for reason in reasons:
+        st.write("• " + reason)
+
+
+def allergen_line(allergens):
+    """Task 2: turns ["milk", "nuts"] into "Allergens: milk, nuts"."""
+    if len(allergens) == 0:
+        return "No allergens listed."
+
+    text = ""
+    for i in range(len(allergens)):       # i = 0, 1, 2, ...
+        text = text + allergens[i]
+        if i < len(allergens) - 1:        # no comma after the last one
+            text = text + ", "
+    return "Allergens: " + text
 
 
 def add_test_item(username, user, field, value):
@@ -72,34 +87,34 @@ def add_test_item(username, user, field, value):
 
 
 def show(username):
-    st.header("Food Scanner")
+    st.header("🔍 SafeBite Food Scanner")   # Task 1: new title
+    st.caption("Scan or type a barcode to check a food against your profile.")
 
     user = db.get_user(username)
 
-    # ---- TEMPORARY test buttons (delete once the Profile tab works) ----
-    if st.button("Add test allergy: milk", key="t_allergy"):
-        add_test_item(username, user, "allergies", "milk")
-    if st.button("Add test medication: tetracycline", key="t_med"):
-        add_test_item(username, user, "medications", "tetracycline")
-    if st.button("Add test avoid food: sugar", key="t_avoid"):
-        add_test_item(username, user, "avoid_foods", "sugar")
-    if st.button("Clear test data", key="t_clear"):
-        user["allergies"] = []
-        user["medications"] = []
-        user["avoid_foods"] = []
-        db.save_user(username, user)
-
-    st.write("Allergies:", user["allergies"])
-    st.write("Medications:", user["medications"])
-    st.write("Avoid foods:", user["avoid_foods"])
+    # ---- TEMPORARY test tools (delete once the Profile tab works) ----
+    with st.expander("🛠 Developer test tools"):
+        if st.button("Add test allergy: milk", key="t_allergy"):
+            add_test_item(username, user, "allergies", "milk")
+        if st.button("Add test medication: tetracycline", key="t_med"):
+            add_test_item(username, user, "medications", "tetracycline")
+        if st.button("Add test avoid food: sugar", key="t_avoid"):
+            add_test_item(username, user, "avoid_foods", "sugar")
+        if st.button("Clear test data", key="t_clear"):
+            user["allergies"] = []
+            user["medications"] = []
+            user["avoid_foods"] = []
+            db.save_user(username, user)
+        st.write("Allergies:", user["allergies"])
+        st.write("Medications:", user["medications"])
+        st.write("Avoid foods:", user["avoid_foods"])
     # ---- end temporary block ----
 
-    # Get a barcode: typed in, or read from a camera photo.
-    code = st.text_input("Enter a barcode", key="barcode_input")
-    with st.expander("Or scan with the camera"):
+    code = st.text_input("Enter a barcode", key="barcode_input",
+                         placeholder="e.g. 3017620422003")
+    with st.expander("📷 Or scan with the camera"):
         photo = st.camera_input("Take a photo of the barcode", key="barcode_photo")
 
-    # A typed code wins. Only use the photo if nothing was typed.
     if photo and not code:
         code = read_barcode_from_image(photo)
         if not code:
@@ -107,7 +122,7 @@ def show(username):
             return
 
     if not code:
-        st.caption("Try 3017620422003 (Nutella) or 737628064502 (Thai peanut noodles).")
+        st.info("Try 3017620422003 (Nutella) or 737628064502 (Thai peanut noodles).")
         return
 
     code = str(code).strip()
@@ -118,25 +133,35 @@ def show(username):
         return
 
     name = product.get("name", "Unknown product")
-    st.subheader(name)
-    with st.expander("Ingredients"):
+    allergens = product.get("allergens") or []
+    image_url = product.get("image_url")      # Task 3: None until barcode.py is edited
+    calories = product.get("calories_per_100g")
+
+    st.divider()
+
+    # Picture on the left, details on the right.
+    if image_url:
+        pic_col, info_col = st.columns([1, 2])
+        with pic_col:
+            st.image(image_url, width=200)
+    else:
+        info_col = st.container()
+
+    with info_col:
+        st.subheader(name)                          # Task 2
+        st.write(allergen_line(allergens))
+        if calories is not None:
+            st.metric("Calories per 100g", f"{calories} kcal")
+
+    with st.expander("📝 Full ingredients"):
         st.write(product.get("ingredients") or "No ingredients listed.")
-        st.write("Allergens:", ", ".join(product.get("allergens") or []) or "none listed")
+
+    st.divider()
 
     level, reasons = check_food(product, user)
+    show_result(level, reasons)
 
-    if level == "avoid":
-        st.error("AVOID")
-    elif level == "caution":
-        st.warning("CAUTION")
-    else:
-        st.success("SAFE: no conflicts found with your profile.")
-
-    for reason in reasons:
-        st.write("- " + reason)
-
-    # Save this scan so the Profile tab can count the warnings.
-    if st.button("Save to history", key="save_history"):
+    if st.button("💾 Save to history", key="save_history"):
         user["scan_history"].append({
             "code": code,
             "name": name,
