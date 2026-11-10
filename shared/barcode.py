@@ -58,6 +58,7 @@ def lookup_barcode(code):
         "calories_per_100g": nutrients.get("energy-kcal_100g"),
         "calories_per_serving": nutrients.get("energy-kcal_serving"),
         "serving_size": product.get("serving_size"),
+        "image_url": product.get("image_url"),
     }
 
 
